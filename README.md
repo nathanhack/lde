@@ -1,2 +1,2 @@
-# LinearDiophantineEquations
+# LDE
 Linear Diophantine Equation Solver
