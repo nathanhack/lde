@@ -5,6 +5,7 @@ import (
 	"github.com/nathanhack/LDE/internal"
 	"github.com/nathanhack/LDE/mat"
 	"github.com/nathanhack/LDE/vec"
+	"math/big"
 	"sort"
 )
 
@@ -12,9 +13,30 @@ type fvec struct {
 	v, f *vec.Vec
 }
 
+type LimitBy interface {
+	Stop(current *vec.Vec) bool
+}
+
+type maxX struct {
+	v *big.Int
+}
+
+func NewMaxXLimit(i *big.Int) LimitBy {
+	return &maxX{v: i}
+}
+
+func (m *maxX) Stop(current *vec.Vec) bool {
+	for i := uint(0); i < current.Len(); i++ {
+		if current.Get(i).Cmp(m.v) >= 0 {
+			return true
+		}
+	}
+	return false
+}
+
 //Solves A𝑥 = 0, returns the minimal bases. Each basis can be added in linear
 // combination with other bases to construct new solutions.
-func Homogeneous(A *mat.Mat) []*vec.Vec {
+func Homogeneous(A *mat.Mat, limits ...LimitBy) []*vec.Vec {
 	//first we create a set of basis vectors
 	𝓟 := make([]*fvec, 0)
 	_, cols := A.Shape()
@@ -27,17 +49,17 @@ func Homogeneous(A *mat.Mat) []*vec.Vec {
 		})
 		eigens[i] = v
 	}
-	return homogeneous(A, 𝓟, eigens)
+	return homogeneous(A, 𝓟, eigens, limits...)
 }
 
-func homogeneous(A *mat.Mat, 𝓟 []*fvec, eigens map[uint]*vec.Vec) []*vec.Vec {
+func homogeneous(A *mat.Mat, 𝓟 []*fvec, eigens map[uint]*vec.Vec, limits ...LimitBy) []*vec.Vec {
 	𝓑 := make([]*vec.Vec, 0)
 	𝓑Map := make(map[string]bool)
 	_, cols := A.Shape()
 	zeroVec := vec.Zeros(cols)
 	for len(𝓟) > 0 {
 		//fist we 𝓑 := 𝓑 ⋃ {𝑥 ∈ 𝓟 | a(𝑥) = 0}
-		// which means we add to 𝓑 any nondup 𝑥 from 𝓟 that solves the equation
+		// which means we add to 𝓑 any non-dup 𝑥 from 𝓟 that solves the equation
 
 		𝓟Not𝓑 := make([]*fvec, 0)
 		for _, v := range 𝓟 {
@@ -73,12 +95,19 @@ func homogeneous(A *mat.Mat, 𝓟 []*fvec, eigens map[uint]*vec.Vec) []*vec.Vec 
 		for _, 𝑥 := range 𝓠 {
 			a𝑥 := a(A, 𝑥.v)
 			frozen := vec.Zeros(cols)
+		eigenLoop:
 			for _, e𝑖 := range eigens {
 				//if not frozen
 				if 𝑥.f.Dot(e𝑖).Cmp(internal.Zero) == 0 {
 					if a𝑥.Dot(a(A, e𝑖)).Cmp(internal.Zero) < 0 {
+						nv := 𝑥.v.Add(e𝑖)
+						for _, l := range limits {
+							if l.Stop(nv) {
+								continue eigenLoop
+							}
+						}
 						𝓟 = append(𝓟, &fvec{
-							v: 𝑥.v.Add(e𝑖),
+							v: nv,
 							f: 𝑥.f.Add(frozen),
 						})
 						frozen = frozen.Add(e𝑖)
@@ -99,7 +128,7 @@ func homogeneous(A *mat.Mat, 𝓟 []*fvec, eigens map[uint]*vec.Vec) []*vec.Vec 
 
 //NonHomogeneous solve the A𝑥 = b equation. Returns the set of specific solutions (M1) and the homogeneous bases (M0).
 // all solutions can be made by taking one from M1 and adding any number the bases from M0 (aka M1+ M0 + M0+...)
-func NonHomogeneous(A *mat.Mat, b *vec.Vec) (M1 []*vec.Vec, M0 []*vec.Vec) {
+func NonHomogeneous(A *mat.Mat, b *vec.Vec, limits ...LimitBy) (M1 []*vec.Vec, M0 []*vec.Vec) {
 	// for this case we create a new matrix
 	// with the 0th index column set to b
 	// then with that as A' solve A'𝑥 = 0
@@ -140,7 +169,7 @@ func NonHomogeneous(A *mat.Mat, b *vec.Vec) (M1 []*vec.Vec, M0 []*vec.Vec) {
 		eigens[i] = v
 	}
 
-	𝓑 := homogeneous(newA, 𝓟, eigens)
+	𝓑 := homogeneous(newA, 𝓟, eigens, limits...)
 	//𝓑 will contain both the specific and homogeneous values
 	//we'll separate them
 	M0 = make([]*vec.Vec, 0)
