@@ -1,3 +1,3 @@
-module github.com/nathanhack/LDE
+module github.com/nathanhack/lde
 
 go 1.12

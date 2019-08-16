@@ -1,8 +1,8 @@
-package LDE
+package lde
 
 import (
-	"github.com/nathanhack/LDE/mat"
-	"github.com/nathanhack/LDE/vec"
+	"github.com/nathanhack/lde/mat"
+	"github.com/nathanhack/lde/vec"
 	"math/big"
 	"strconv"
 	"testing"

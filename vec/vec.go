@@ -1,7 +1,7 @@
 package vec
 
 import (
-	"github.com/nathanhack/LDE/internal"
+	"github.com/nathanhack/lde/internal"
 	"math/big"
 	"strings"
 )

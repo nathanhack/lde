@@ -2,8 +2,8 @@ package mat
 
 import (
 	"fmt"
-	"github.com/nathanhack/LDE/internal"
-	"github.com/nathanhack/LDE/vec"
+	"github.com/nathanhack/lde/internal"
+	"github.com/nathanhack/lde/vec"
 	"math/big"
 	"strings"
 )

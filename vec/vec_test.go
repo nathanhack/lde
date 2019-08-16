@@ -1,6 +1,7 @@
 package vec
 
 import (
+	"github.com/nathanhack/lde/internal"
 	"math/big"
 	"strconv"
 	"testing"
@@ -16,7 +17,7 @@ func TestVectors(t *testing.T) {
 		{Ones(2).Add(Ones(1)), NewVec(big.NewInt(2), big.NewInt(1)), true},
 		{Ones(2).Scalar(big.NewInt(2)), NewVec(big.NewInt(2), big.NewInt(2)), true},
 		{Eigen(1), NewVec(big.NewInt(0), big.NewInt(1), big.NewInt(0)), true},
-		{Zeros(2).Set(1, one), NewVec(big.NewInt(0), big.NewInt(1)), true},
+		{Zeros(2).Set(1, internal.One), NewVec(big.NewInt(0), big.NewInt(1)), true},
 		{Zeros(2), Ones(2), false},
 	}
 	for i, test := range tests {

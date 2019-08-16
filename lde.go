@@ -1,10 +1,10 @@
-package LDE
+package lde
 
 import (
 	"fmt"
-	"github.com/nathanhack/LDE/internal"
-	"github.com/nathanhack/LDE/mat"
-	"github.com/nathanhack/LDE/vec"
+	"github.com/nathanhack/lde/internal"
+	"github.com/nathanhack/lde/mat"
+	"github.com/nathanhack/lde/vec"
 	"math/big"
 	"sort"
 )
